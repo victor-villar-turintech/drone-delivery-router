@@ -116,6 +116,9 @@ npm run dev
 | `POST` | `/api/simulation/wind` | Update wind speed & direction |
 | `GET` | `/api/simulation/state` | Get current simulation snapshot |
 | `WS` | `/ws/simulation` | Live simulation telemetry stream |
+| `GET` | `/api/benchmark/stats` | Accumulated benchmark metrics for all instrumented functions |
+| `POST` | `/api/benchmark/routing` | Run routing benchmark (query param: `iterations`, default 5) |
+| `POST` | `/api/benchmark/physics` | Run physics benchmark (query param: `iterations`, default 1000) |
 
 ## Running Tests
 
@@ -124,6 +127,94 @@ cd backend
 source venv/bin/activate
 pytest -v
 ```
+
+## Performance Benchmarking
+
+The system includes built-in benchmarking for both backend and frontend.
+
+### Backend Benchmarks
+
+Backend benchmarks measure **wall-clock time**, **CPU user/system time**, **peak RSS memory**, and **RSS delta** for every instrumented operation. Metrics are automatically logged to the server console and aggregated across calls.
+
+**Automatic instrumentation** — once the backend is running, the following operations are benchmarked on every invocation:
+- `find_path()` — A* pathfinding (logged per call)
+- `simulation_tick` — each simulation tick
+- `dispatch_order()` — full dispatch pipeline (also returned in the API response)
+
+You will see `[BENCH]` log lines in the server console:
+
+```
+18:04:12 INFO [drone_delivery.benchmark] [BENCH] find_path        wall=  12.34 ms  cpu_user=  11.80 ms  cpu_sys=   0.42 ms  peak_rss=98304 KB  rss_delta=+128 KB
+```
+
+**On-demand benchmark endpoints:**
+
+```bash
+# Run routing benchmark (A* pathfinding, 5 iterations)
+curl -X POST "http://localhost:8000/api/benchmark/routing?iterations=5"
+
+# Run physics benchmark (battery/wind computations, 1000 iterations)
+curl -X POST "http://localhost:8000/api/benchmark/physics?iterations=1000"
+
+# View accumulated stats for all instrumented functions
+curl http://localhost:8000/api/benchmark/stats
+```
+
+Example routing benchmark response:
+
+```json
+{
+  "benchmark": {
+    "name": "find_path",
+    "count": 5,
+    "wall_time_ms": { "mean": 1.6, "median": 1.7, "min": 1.3, "max": 1.8, "stdev": 0.23 },
+    "cpu_total_ms": { "mean": 1.6, "median": 1.5, "min": 1.3, "max": 1.7 },
+    "peak_rss_kb": 91960
+  },
+  "route_sample": { "path": [...], "distance_km": 1.42, "battery_cost_pct": 3.26 }
+}
+```
+
+You can also use the benchmark utilities programmatically in Python:
+
+```python
+from app.engine.benchmark import benchmark, benchmark_fn, run_routing_benchmark
+
+# As a context manager
+with benchmark("my_operation") as result:
+    do_something()
+print(result.wall_time_ms, result.cpu_user_ms, result.peak_rss_kb)
+
+# As a decorator
+@benchmark_fn("my_function")
+def my_function():
+    ...
+```
+
+### Frontend Benchmarks
+
+Frontend benchmarks run automatically in the browser and track:
+- **FPS** — frames per second
+- **JS Heap Memory** — used and total heap size (Chrome only)
+- **WebSocket Latency** — processing time per incoming simulation message
+- **Web Vitals** — FCP, LCP, CLS, INP, TTFB (via the `web-vitals` library)
+- **React Render Times** — per-component render duration via React Profiler
+
+**Dashboard panel:** Open the dashboard at `http://localhost:5173`, scroll to the bottom of the sidebar, and click **"Performance ▸"** to expand the live metrics panel.
+
+**Browser console:** Open DevTools (F12) → Console to see `[BENCH-FRONTEND]` log entries emitted every 5 seconds:
+
+```
+[BENCH-FRONTEND] {
+  fps: 61,
+  renders: { Sidebar: { count: 100, avgMs: 0.6, maxMs: 2.1 }, MapView: { ... } },
+  wsLatency: { count: 74, avgMs: 0.08, maxMs: 0.2 },
+  webVitals: { TTFB: 9, FCP: 148, LCP: 200 },
+  memory: { usedMB: 14, totalMB: 15, limitMB: 2144 }
+}
+```
+
+> **Note:** `performance.memory` (JS Heap) is only available in Chromium-based browsers. Web Vitals are one-shot metrics captured on page load.
 
 ## Project Structure
 
@@ -139,7 +230,8 @@ pytest -v
 │   │   ├── engine/
 │   │   │   ├── routing.py       # A* pathfinding with NFZ avoidance
 │   │   │   ├── physics.py       # Battery depletion & wind model
-│   │   │   └── simulation.py    # Tick-based simulation loop
+│   │   │   ├── simulation.py    # Tick-based simulation loop
+│   │   │   └── benchmark.py     # Performance benchmarking utilities
 │   │   └── websocket/
 │   │       └── manager.py       # WebSocket connection manager
 │   ├── sql/
@@ -154,9 +246,11 @@ pytest -v
 │   │   │   ├── MapView.jsx      # Leaflet map with drones, NFZs, hubs
 │   │   │   ├── Sidebar.jsx      # Dashboard sidebar
 │   │   │   ├── DroneList.jsx    # Fleet health panel
-│   │   │   └── OrderList.jsx    # Order management panel
+│   │   │   ├── OrderList.jsx    # Order management panel
+│   │   │   └── BenchmarkPanel.jsx # Live performance metrics overlay
 │   │   └── hooks/
-│   │       └── useWebSocket.js  # Auto-reconnecting WS hook
+│   │       ├── useWebSocket.js  # Auto-reconnecting WS hook
+│   │       └── useBenchmark.js  # Frontend performance measurement
 │   └── package.json
 ├── .env.example                 # Environment variable template
 ├── setup.sh                     # One-command local setup
