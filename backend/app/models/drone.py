@@ -14,7 +14,11 @@ class Drone(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(100), nullable=False)
-    status = Column(SAEnum(DroneStatus), default=DroneStatus.idle, nullable=False)
+    status = Column(
+        SAEnum("idle", "charging", "en_route", name="drone_status", create_constraint=True),
+        default=DroneStatus.idle.value,
+        nullable=False,
+    )
     max_payload_kg = Column(Float, nullable=False)
     battery_capacity_mah = Column(Integer, nullable=False)
     battery_pct = Column(Float, default=100.0, nullable=False)

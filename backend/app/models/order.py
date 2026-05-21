@@ -27,6 +27,14 @@ class Order(Base):
     dropoff_lat = Column(Float, nullable=False)
     dropoff_lon = Column(Float, nullable=False)
     package_weight_kg = Column(Float, nullable=False)
-    priority = Column(SAEnum(PriorityLevel), default=PriorityLevel.medium, nullable=False)
-    status = Column(SAEnum(OrderStatus), default=OrderStatus.pending, nullable=False)
+    priority = Column(
+        SAEnum("low", "medium", "high", "critical", name="priority_level", create_constraint=True),
+        default=PriorityLevel.medium.value,
+        nullable=False,
+    )
+    status = Column(
+        SAEnum("pending", "assigned", "in_transit", "delivered", "cancelled", name="order_status", create_constraint=True),
+        default=OrderStatus.pending.value,
+        nullable=False,
+    )
     assigned_drone_id = Column(Integer, nullable=True)

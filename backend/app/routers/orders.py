@@ -42,12 +42,12 @@ async def dispatch_order(order_id: int, db: AsyncSession = Depends(get_db)):
     order = await db.get(Order, order_id)
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
-    if order.status != OrderStatus.pending:
+    if order.status != OrderStatus.pending.value:
         raise HTTPException(status_code=400, detail="Order is not pending")
 
     result = await db.execute(
         select(Drone).where(
-            Drone.status == DroneStatus.idle,
+            Drone.status == DroneStatus.idle.value,
             Drone.max_payload_kg >= order.package_weight_kg,
         )
     )
@@ -85,8 +85,8 @@ async def dispatch_order(order_id: int, db: AsyncSession = Depends(get_db)):
     total_battery = route_to_pickup["battery_cost_pct"] + route_to_dropoff["battery_cost_pct"]
     total_distance = route_to_pickup["distance_km"] + route_to_dropoff["distance_km"]
 
-    drone.status = DroneStatus.en_route
-    order.status = OrderStatus.assigned
+    drone.status = DroneStatus.en_route.value
+    order.status = OrderStatus.assigned.value
     order.assigned_drone_id = drone.id
     await db.commit()
 
