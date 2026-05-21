@@ -4,9 +4,11 @@ from __future__ import annotations
 
 import asyncio
 import json
+import logging
 import math
 from dataclasses import dataclass, field
 
+from app.engine.benchmark import benchmark
 from app.engine.physics import (
     BatteryState,
     WindCondition,
@@ -15,6 +17,8 @@ from app.engine.physics import (
     effective_speed,
 )
 from app.engine.routing import compute_battery_cost, haversine_km, GridNode
+
+logger = logging.getLogger("drone_delivery.simulation")
 
 
 @dataclass
@@ -82,6 +86,10 @@ class SimulationEngine:
         self._running = False
 
     def _tick(self) -> None:
+        with benchmark("simulation_tick", collect=len(self.drones) > 0):
+            self._advance_drones()
+
+    def _advance_drones(self) -> None:
         for drone in self.drones.values():
             if drone.status != "en_route" or not drone.path:
                 continue

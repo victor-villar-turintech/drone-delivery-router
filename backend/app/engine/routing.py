@@ -4,11 +4,16 @@ from __future__ import annotations
 
 import heapq
 import json
+import logging
 import math
 from dataclasses import dataclass, field
 from typing import Sequence
 
 from shapely.geometry import Point, shape
+
+from app.engine.benchmark import benchmark
+
+logger = logging.getLogger("drone_delivery.routing")
 
 
 @dataclass(frozen=True, order=True)
@@ -74,47 +79,54 @@ def find_path(
     """Return a route dict with 'path' (list of [lat, lon]),
     'distance_km', and 'battery_cost_pct'."""
 
-    polys = _build_nofly_polygons(nofly_geojsons)
-    start = _snap_to_grid(start_lat, start_lon, grid_step)
-    goal = _snap_to_grid(end_lat, end_lon, grid_step)
+    with benchmark("find_path") as bench:
+        polys = _build_nofly_polygons(nofly_geojsons)
+        start = _snap_to_grid(start_lat, start_lon, grid_step)
+        goal = _snap_to_grid(end_lat, end_lon, grid_step)
 
-    if _is_in_nofly(start.lat, start.lon, polys):
-        start = _find_nearest_clear(start, polys, grid_step)
-    if _is_in_nofly(goal.lat, goal.lon, polys):
-        goal = _find_nearest_clear(goal, polys, grid_step)
+        if _is_in_nofly(start.lat, start.lon, polys):
+            start = _find_nearest_clear(start, polys, grid_step)
+        if _is_in_nofly(goal.lat, goal.lon, polys):
+            goal = _find_nearest_clear(goal, polys, grid_step)
 
-    open_set: list[_PQEntry] = []
-    heapq.heappush(open_set, _PQEntry(0.0, start))
-    came_from: dict[GridNode, GridNode | None] = {start: None}
-    g_score: dict[GridNode, float] = {start: 0.0}
+        open_set: list[_PQEntry] = []
+        heapq.heappush(open_set, _PQEntry(0.0, start))
+        came_from: dict[GridNode, GridNode | None] = {start: None}
+        g_score: dict[GridNode, float] = {start: 0.0}
 
-    max_iterations = 50_000
-    iterations = 0
+        max_iterations = 50_000
+        iterations = 0
 
-    while open_set and iterations < max_iterations:
-        iterations += 1
-        current = heapq.heappop(open_set).node
+        while open_set and iterations < max_iterations:
+            iterations += 1
+            current = heapq.heappop(open_set).node
 
-        if haversine_km(current, goal) < grid_step * 80:
-            path = _reconstruct(came_from, current, goal)
-            dist = _path_distance(path)
-            cost = compute_battery_cost(dist, payload_kg, battery_capacity_mah, wind_vector)
-            return {
-                "path": [[n.lat, n.lon] for n in path],
-                "distance_km": round(dist, 4),
-                "battery_cost_pct": round(cost, 2),
-            }
+            if haversine_km(current, goal) < grid_step * 80:
+                path = _reconstruct(came_from, current, goal)
+                dist = _path_distance(path)
+                cost = compute_battery_cost(dist, payload_kg, battery_capacity_mah, wind_vector)
+                logger.info(
+                    "Path found: %d waypoints, %.4f km, %.2f%% battery, %d iterations",
+                    len(path), dist, cost, iterations,
+                )
+                return {
+                    "path": [[n.lat, n.lon] for n in path],
+                    "distance_km": round(dist, 4),
+                    "battery_cost_pct": round(cost, 2),
+                }
 
-        for nb in _neighbors(current, grid_step):
-            if _is_in_nofly(nb.lat, nb.lon, polys):
-                continue
-            move_cost = _edge_cost(current, nb, wind_vector, payload_kg)
-            tentative = g_score[current] + move_cost
-            if tentative < g_score.get(nb, float("inf")):
-                g_score[nb] = tentative
-                f = tentative + haversine_km(nb, goal)
-                heapq.heappush(open_set, _PQEntry(f, nb))
-                came_from[nb] = current
+            for nb in _neighbors(current, grid_step):
+                if _is_in_nofly(nb.lat, nb.lon, polys):
+                    continue
+                move_cost = _edge_cost(current, nb, wind_vector, payload_kg)
+                tentative = g_score[current] + move_cost
+                if tentative < g_score.get(nb, float("inf")):
+                    g_score[nb] = tentative
+                    f = tentative + haversine_km(nb, goal)
+                    heapq.heappush(open_set, _PQEntry(f, nb))
+                    came_from[nb] = current
+
+        logger.warning("No path found after %d iterations", iterations)
 
     return {"path": [], "distance_km": 0.0, "battery_cost_pct": 0.0, "error": "no_path_found"}
 

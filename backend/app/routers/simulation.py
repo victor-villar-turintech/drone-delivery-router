@@ -4,6 +4,7 @@ import json
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel
 
+from app.engine.benchmark import all_stats, log_all_summaries, run_routing_benchmark, run_physics_benchmark
 from app.engine.simulation import simulation_engine
 from app.websocket.manager import ws_manager
 
@@ -39,3 +40,22 @@ async def ws_simulation(ws: WebSocket):
     finally:
         simulation_engine.unsubscribe(queue)
         ws_manager.disconnect(ws)
+
+
+@router.get("/api/benchmark/stats")
+async def benchmark_stats():
+    """Return accumulated benchmark metrics for all instrumented functions."""
+    log_all_summaries()
+    return {name: stats.summary() for name, stats in all_stats().items()}
+
+
+@router.post("/api/benchmark/routing")
+async def benchmark_routing(iterations: int = 5):
+    """Run routing benchmark and return performance metrics."""
+    return run_routing_benchmark(iterations=iterations)
+
+
+@router.post("/api/benchmark/physics")
+async def benchmark_physics(iterations: int = 1000):
+    """Run physics benchmark and return performance metrics."""
+    return run_physics_benchmark(iterations=iterations)
