@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from "react";
+import { recordWsLatency } from "./useBenchmark";
 
 const WS_URL =
   import.meta.env.VITE_WS_URL || "ws://localhost:8000/ws/simulation";
@@ -17,11 +18,13 @@ export default function useWebSocket() {
     ws.onopen = () => setConnected(true);
 
     ws.onmessage = (evt) => {
+      const t0 = performance.now();
       try {
         setSimState(JSON.parse(evt.data));
       } catch {
         /* ignore malformed */
       }
+      recordWsLatency(performance.now() - t0);
     };
 
     ws.onclose = () => {

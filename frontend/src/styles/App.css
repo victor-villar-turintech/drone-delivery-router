@@ -221,3 +221,45 @@ body {
   border: 2px solid white;
   box-shadow: 0 0 4px rgba(0,0,0,0.3);
 }
+
+/* Benchmark Panel */
+.benchmark-panel {
+  border-top: 1px solid #334155;
+}
+.benchmark-panel h3 {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #94a3b8;
+}
+.bench-content {
+  margin-top: 8px;
+}
+.bench-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 3px 0;
+  font-size: 12px;
+}
+.bench-label {
+  color: #94a3b8;
+}
+.bench-value {
+  font-family: "SF Mono", "Fira Code", monospace;
+  color: #e2e8f0;
+}
+.bench-value.warn {
+  color: #f59e0b;
+}
+.bench-divider {
+  border-top: 1px solid #334155;
+  margin: 6px 0;
+}
+.bench-section-title {
+  font-size: 11px;
+  text-transform: uppercase;
+  color: #64748b;
+  margin-bottom: 4px;
+  letter-spacing: 0.04em;
+}

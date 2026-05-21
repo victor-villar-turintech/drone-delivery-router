@@ -1,7 +1,7 @@
 import DroneList from "./DroneList";
 import OrderList from "./OrderList";
 
-export default function Sidebar({ drones = [], orders = [], wind = {}, connected, onDispatch }) {
+export default function Sidebar({ drones = [], orders = [], wind = {}, connected, onDispatch, benchmarkPanel }) {
   return (
     <aside className="sidebar">
       <div className="sidebar-header">
@@ -19,6 +19,7 @@ export default function Sidebar({ drones = [], orders = [], wind = {}, connected
 
       <DroneList drones={drones} />
       <OrderList orders={orders} onDispatch={onDispatch} />
+      {benchmarkPanel}
     </aside>
   );
 }
