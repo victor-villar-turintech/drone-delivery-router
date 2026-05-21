@@ -1,0 +1,265 @@
+/* ============================================================
+   Drone Delivery Router – Dashboard Styles
+   ============================================================ */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: #0f172a;
+  color: #e2e8f0;
+}
+
+/* Layout */
+.app-layout {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* Sidebar */
+.sidebar {
+  width: 360px;
+  min-width: 360px;
+  background: #1e293b;
+  overflow-y: auto;
+  border-right: 1px solid #334155;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sidebar-header {
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 1px solid #334155;
+  background: #0f172a;
+}
+
+.sidebar-header h1 {
+  font-size: 18px;
+  flex: 1;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+.status-dot.online { background: #22c55e; }
+.status-dot.offline { background: #ef4444; }
+
+.status-text {
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+/* Panels */
+.panel {
+  padding: 14px 20px;
+  border-bottom: 1px solid #334155;
+}
+
+.panel h3 {
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #94a3b8;
+  margin-bottom: 10px;
+}
+
+.wind-panel {
+  padding: 10px 20px;
+  background: #1a2332;
+  border-bottom: 1px solid #334155;
+}
+.wind-panel h3 {
+  font-size: 12px;
+  text-transform: uppercase;
+  color: #94a3b8;
+  margin-bottom: 4px;
+}
+.wind-panel p {
+  font-size: 14px;
+}
+
+/* Drone List */
+.drone-list {
+  list-style: none;
+}
+
+.drone-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid #1e293b;
+}
+
+.drone-id {
+  font-weight: 600;
+  font-size: 14px;
+  min-width: 36px;
+}
+
+.drone-info {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex: 1;
+}
+
+.battery {
+  font-size: 13px;
+  color: #94a3b8;
+}
+
+.warning {
+  font-size: 11px;
+  color: #f59e0b;
+  font-weight: 500;
+}
+
+/* Badges */
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+.badge.idle { background: #1e40af; color: #93c5fd; }
+.badge.en_route { background: #065f46; color: #6ee7b7; }
+.badge.charging { background: #713f12; color: #fde047; }
+.badge.assigned { background: #312e81; color: #a5b4fc; }
+.badge.priority-low { background: #334155; color: #94a3b8; }
+.badge.priority-medium { background: #1e40af; color: #93c5fd; }
+.badge.priority-high { background: #9a3412; color: #fdba74; }
+.badge.priority-critical { background: #7f1d1d; color: #fca5a5; }
+
+/* Orders */
+.order-group {
+  margin-bottom: 12px;
+}
+.order-group h4 {
+  font-size: 12px;
+  color: #64748b;
+  margin-bottom: 6px;
+}
+
+.order-card {
+  background: #0f172a;
+  border-radius: 6px;
+  padding: 10px 12px;
+  margin-bottom: 6px;
+}
+
+.order-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.order-details {
+  font-size: 12px;
+  color: #94a3b8;
+  margin-top: 4px;
+}
+
+.dispatch-btn {
+  margin-top: 8px;
+  padding: 5px 14px;
+  border: none;
+  border-radius: 4px;
+  background: #2563eb;
+  color: white;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.dispatch-btn:hover {
+  background: #1d4ed8;
+}
+
+.muted {
+  font-size: 13px;
+  color: #64748b;
+}
+
+/* Map */
+.map-container {
+  flex: 1;
+}
+
+/* Leaflet custom markers */
+.drone-dot {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid white;
+  box-shadow: 0 0 6px rgba(0,0,0,0.4);
+}
+.drone-dot.idle { background: #3b82f6; }
+.drone-dot.en_route { background: #22c55e; }
+.drone-dot.charging { background: #eab308; }
+
+.hub-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #f97316;
+  border: 2px solid white;
+  box-shadow: 0 0 4px rgba(0,0,0,0.3);
+}
+
+/* Benchmark Panel */
+.benchmark-panel {
+  border-top: 1px solid #334155;
+}
+.benchmark-panel h3 {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #94a3b8;
+}
+.bench-content {
+  margin-top: 8px;
+}
+.bench-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 3px 0;
+  font-size: 12px;
+}
+.bench-label {
+  color: #94a3b8;
+}
+.bench-value {
+  font-family: "SF Mono", "Fira Code", monospace;
+  color: #e2e8f0;
+}
+.bench-value.warn {
+  color: #f59e0b;
+}
+.bench-divider {
+  border-top: 1px solid #334155;
+  margin: 6px 0;
+}
+.bench-section-title {
+  font-size: 11px;
+  text-transform: uppercase;
+  color: #64748b;
+  margin-bottom: 4px;
+  letter-spacing: 0.04em;
+}
